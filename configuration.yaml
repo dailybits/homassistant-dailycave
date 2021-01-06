@@ -1,0 +1,91 @@
+# Configure a default setup of Home Assistant (frontend, api, etc)
+default_config:
+
+# Redirect output to Synology NAS Maria DB
+recorder:
+  db_url: !secret dburl
+  purge_keep_days: 10
+
+frontend:
+  themes: !include_dir_merge_named themes
+  
+# Text to speech
+tts:
+  - platform: google_translate
+
+# Sensors
+sensor:
+  - platform: uptime
+  - platform: dnsip
+  - platform: bitcoin
+    currency: EUR
+    display_options:
+        - exchangerate
+        - trade_volume_btc
+  - platform: systemmonitor
+    resources:
+        - type: disk_use
+          arg: /home
+        - type: disk_free
+          arg: /home
+        - type: memory_use
+        - type: memory_free
+        - type: processor_use
+        - type: last_boot
+  - platform: afvalbeheer
+    wastecollector: RecycleApp
+    resources:
+      - restafval
+      - papier
+      - pmd
+      - gft
+    postcode: xxxxx
+    streetname: xxxxx
+    streetnumber: x
+    upcomingsensor: 1
+    dateformat: '%d-%m-%Y'
+    dateonly: 0
+    dateobject: 0
+    dayofweek: 1
+    alwaysshowday: 0
+    name: ''
+    nameprefix: 1
+    builtinicons: 1
+    disableicons: 0
+    dutch: 1
+  - platform: seventeentrack
+    username: xxxxxx
+    password: !secret seventeenpassw
+  - platform: sma
+    host: 192.168.xxx.xxx
+    password: !secret smapassw
+    sensors:
+      - pv_power
+      - total_yield   
+      - daily_yield
+      - status
+  - platform: template
+    sensors:
+      nextsunrise:
+        entity_id: sun.sun
+        friendly_name: 'Next Sunrise'
+        value_template: >
+          {{ as_timestamp(states.sun.sun.attributes.next_rising) | timestamp_custom(' %I:%M %p') | replace(" 0", "") }}
+        icon_template: mdi:weather-sunset-up
+      nextsunset:
+        entity_id: sun.sun
+        friendly_name: 'Next Sunset'
+        value_template: >
+          {{ as_timestamp(states.sun.sun.attributes.next_setting) | timestamp_custom(' %I:%M %p') | replace(" 0", "") }}
+        icon_template: mdi:weather-sunset-down
+      
+      
+binary_sensor:
+  - platform: uptimerobot
+    api_key: !secret uptimerobotkey 
+
+
+group: !include groups.yaml
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
